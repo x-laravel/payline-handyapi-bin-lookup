@@ -27,6 +27,6 @@ class TestCase extends Orchestra
 
         $app['config']->set('cache.default', 'array');
 
-        $app['config']->set('payline.bin_lookup.default', 'handyapi');
+        $app['config']->set('payline.bin_lookup.providers', ['handyapi']);
     }
 }

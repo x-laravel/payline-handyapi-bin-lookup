@@ -3,6 +3,7 @@
 namespace XLaravel\Payline\BinLookup\HandyApi\Tests\Feature;
 
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use XLaravel\Payline\BinLookup\HandyApi\HandyApiBinLookup;
 use XLaravel\Payline\BinLookup\HandyApi\Tests\TestCase;
@@ -137,6 +138,35 @@ class HandyApiBinLookupTest extends TestCase
         Http::fake(['*' => Http::response('', 401)]);
 
         $this->assertNull($this->provider->lookup('45717360'));
+    }
+
+    public function test_the_cache_holds_the_payload_rather_than_the_profile(): void
+    {
+        $this->fakeBin();
+
+        $this->provider->lookup('45717360');
+
+        $this->assertSame('VISA', Cache::get('payline:bin-lookup:handyapi:45717360')['Scheme']);
+    }
+
+    public function test_a_cached_payload_is_mapped_without_asking_again(): void
+    {
+        Cache::put('payline:bin-lookup:handyapi:45717360', [
+            'Status' => 'SUCCESS',
+            'Scheme' => 'MASTERCARD',
+            'Type' => 'CREDIT',
+            'CardTier' => 'CORPORATE',
+            'Country' => ['A2' => 'TR'],
+        ], 60);
+
+        Http::fake();
+
+        $profile = $this->provider->lookup('45717360');
+
+        $this->assertSame(CardScheme::Mastercard, $profile->scheme);
+        $this->assertSame(CardCategory::Commercial, $profile->category);
+        $this->assertSame('TR', $profile->issuerCountry);
+        Http::assertNothingSent();
     }
 
     public function test_a_resolved_profile_is_served_from_the_cache(): void

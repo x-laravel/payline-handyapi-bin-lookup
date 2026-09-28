@@ -31,13 +31,20 @@ Name `handyapi` as the BIN lookup driver in `config/payline.php`:
 
 ```php
 'bin_lookup' => [
-    'default' => env('PAYLINE_BIN_LOOKUP_DRIVER', 'handyapi'),
+    'providers' => ['handyapi'],
     'drivers' => [
         'handyapi' => [
             'api_key' => env('HANDYAPI_KEY'),
         ],
     ],
 ],
+```
+
+HandyAPI names no card family, so a shop routing on Turkish loyalty programs lists a
+provider that does before it and lets Payline merge the two answers:
+
+```php
+'providers' => ['hoppa', 'handyapi'],
 ```
 
 | Key | Default | Meaning |
@@ -66,6 +73,10 @@ provider reads `Status` rather than the status code.
 A resolved profile is cached for 30 days, since a BIN belongs to an issuer for as long
 as the range exists. An answer that resolves nothing is not cached, so a newly issued
 range works the next time it is asked about.
+
+What is stored is HandyAPI's own payload, not the profile built from it. The profile is
+rebuilt on every read, so a correction to this mapping or a new field on `CardProfile`
+takes effect immediately instead of waiting a month for the cache to turn over.
 
 ## What HandyAPI Fills
 

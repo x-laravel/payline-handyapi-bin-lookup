@@ -47,27 +47,28 @@ class HandyApiBinLookup implements BinLookupProvider
         $bin = substr($bin, 0, 8);
 
         if ($this->cacheTtl <= 0) {
-            return $this->fetch($bin);
+            return $this->map($bin, $this->fetch($bin));
         }
 
         $cache = Cache::store($this->cacheStore);
         $key = self::CACHE_PREFIX . $bin;
         $cached = $cache->get($key);
 
-        if ($cached instanceof CardProfile) {
-            return $cached;
+        if (is_array($cached)) {
+            return $this->map($bin, $cached);
         }
 
-        $profile = $this->fetch($bin);
+        $body = $this->fetch($bin);
+        $profile = $this->map($bin, $body);
 
         if ($profile !== null) {
-            $cache->put($key, $profile, $this->cacheTtl);
+            $cache->put($key, $body, $this->cacheTtl);
         }
 
         return $profile;
     }
 
-    private function fetch(string $bin): ?CardProfile
+    private function fetch(string $bin): ?array
     {
         try {
             $response = Http::timeout($this->timeout)
@@ -83,7 +84,12 @@ class HandyApiBinLookup implements BinLookupProvider
 
         $body = $response->json();
 
-        if (! is_array($body) || ($body['Status'] ?? null) !== self::FOUND) {
+        return is_array($body) ? $body : null;
+    }
+
+    private function map(string $bin, ?array $body): ?CardProfile
+    {
+        if ($body === null || ($body['Status'] ?? null) !== self::FOUND) {
             return null;
         }
 
