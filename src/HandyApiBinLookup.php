@@ -17,7 +17,7 @@ class HandyApiBinLookup implements BinLookupProvider
 
     private const string FOUND = 'SUCCESS';
 
-    private const int CACHE_TTL = 2592000;
+    private const int CACHE_TTL = 7776000;
 
     private const string CACHE_PREFIX = 'payline:bin-lookup:handyapi:';
 

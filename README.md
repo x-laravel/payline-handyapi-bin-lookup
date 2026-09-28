@@ -51,7 +51,7 @@ provider that does before it and lets Payline merge the two answers:
 |-----|---------|---------|
 | `api_key` | `null` | Sent as `x-api-key` when set |
 | `base_url` | `https://data.handyapi.com` | Address to query |
-| `cache_ttl` | `2592000` | Seconds a resolved profile is kept; `0` turns caching off |
+| `cache_ttl` | `7776000` | Seconds a resolved profile is kept; `0` turns caching off |
 | `cache_store` | `null` | Cache store name; the application default when absent |
 | `timeout` | `5` | Seconds to wait for an answer |
 
@@ -70,13 +70,17 @@ the default gateway, exactly as it does when no lookup is configured.
 A BIN that is not held comes back as HTTP 200 with `{"Status":"NOT FOUND"}`, so the
 provider reads `Status` rather than the status code.
 
-A resolved profile is cached for 30 days, since a BIN belongs to an issuer for as long
-as the range exists. An answer that resolves nothing is not cached, so a newly issued
-range works the next time it is asked about.
+A resolved profile is cached for 90 days. The fields this service fills are the durable
+ones: the country and the scheme belong to the range by assignment and do not move,
+unlike an issuer's trading name or a loyalty program, which change when banks merge or
+leave a scheme. A provider that answers those deserves a shorter life than this one.
+
+An answer that resolves nothing is not cached, so a newly issued range works the next
+time it is asked about.
 
 What is stored is HandyAPI's own payload, not the profile built from it. The profile is
 rebuilt on every read, so a correction to this mapping or a new field on `CardProfile`
-takes effect immediately instead of waiting a month for the cache to turn over.
+takes effect immediately instead of waiting the cache out.
 
 ## What HandyAPI Fills
 
