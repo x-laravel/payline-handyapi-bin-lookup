@@ -126,7 +126,7 @@ class ForeignCardsGoToQnb implements GatewayRoutingPolicy
     {
         $profile = $request->card?->profile ?? $request->cardProfile;
 
-        if ($profile === null || ! $profile->issuedOutside(config('app.country'))) {
+        if ($profile === null || ! $profile->issuedOutside(config('payline.country'))) {
             return true;
         }
 
